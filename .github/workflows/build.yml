@@ -1,0 +1,62 @@
+name: Build Shree Maruti EXE
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install customtkinter Pillow pyinstaller
+
+      - name: Generate Icon (icon.ico)
+        run: |
+          # Logic: Agar icon_source.png hai toh wo use karo, nahi toh logo crop karo
+          python -c "
+          from PIL import Image
+          import os
+          try:
+              if os.path.exists('icon_source.png'):
+                  print('Found square icon_source.png! Using it.')
+                  img = Image.open('icon_source.png')
+                  img.save('icon.ico')
+              elif os.path.exists('maruti_logo.png'):
+                  print('No square icon found. Cropping center from maruti_logo.png...')
+                  img = Image.open('maruti_logo.png')
+                  w, h = img.size
+                  side = min(w, h)
+                  left = (w - side) // 2
+                  top = (h - side) // 2
+                  crop = img.crop((left, top, left + side, top + side))
+                  crop = crop.resize((256, 256), Image.Resampling.LANCZOS)
+                  crop.save('icon.ico')
+              else:
+                  print('Warning: No logo or icon file found.')
+          except Exception as e:
+              print(f'Error: {e}')
+          "
+
+      - name: Build EXE with PyInstaller
+        run: |
+          # Build command updated for Shree Maruti
+          pyinstaller --onefile --windowed --icon="icon.ico" --add-data "maruti_logo.png;." --add-data "icon.ico;." --name "Shree_Maruti_Calculator" shree_maruti_calc.py
+
+      - name: Upload EXE Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shree_Maruti_Calculator
+          path: dist/Shree_Maruti_Calculator.exe
