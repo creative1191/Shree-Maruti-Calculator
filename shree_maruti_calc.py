@@ -81,7 +81,7 @@ class ShreeMarutiApp(ctk.CTk):
         content_card = ctk.CTkFrame(main_frame, fg_color=self.colors["card"], corner_radius=0, border_width=0)
         content_card.grid(row=1, column=0, sticky="ew")
 
-        # --- 1. CATEGORY DROPDOWN (Directly written to avoid bugs) ---
+        # --- CATEGORY ---
         ctk.CTkLabel(content_card, text="Category", font=ctk.CTkFont(size=14, weight="bold"), text_color=self.colors["text_main"], anchor="w").pack(fill="x", padx=20, pady=(15, 5))
         self.cat_var = ctk.StringVar(value="Standard Dox")
         cat_menu = ctk.CTkOptionMenu(content_card, variable=self.cat_var, 
@@ -91,7 +91,7 @@ class ShreeMarutiApp(ctk.CTk):
                                      font=ctk.CTkFont(size=13, weight="bold"), text_color=self.colors["text_main"])
         cat_menu.pack(fill="x", padx=20, pady=(0, 15))
 
-        # --- 2. ZONE DROPDOWN (Directly written) ---
+        # --- ZONE ---
         ctk.CTkLabel(content_card, text="Zone", font=ctk.CTkFont(size=14, weight="bold"), text_color=self.colors["text_main"], anchor="w").pack(fill="x", padx=20, pady=(10, 5))
         self.zone_var = ctk.StringVar(value="State")
         zone_menu = ctk.CTkOptionMenu(content_card, variable=self.zone_var, 
@@ -101,7 +101,7 @@ class ShreeMarutiApp(ctk.CTk):
                                       font=ctk.CTkFont(size=13, weight="bold"), text_color=self.colors["text_main"])
         zone_menu.pack(fill="x", padx=20, pady=(0, 15))
 
-        # --- 3. WEIGHT ENTRY (Directly written) ---
+        # --- WEIGHT ---
         ctk.CTkLabel(content_card, text="Weight (Kg)", font=ctk.CTkFont(size=14, weight="bold"), text_color=self.colors["text_main"], anchor="w").pack(fill="x", padx=20, pady=(10, 5))
         self.weight_entry = ctk.CTkEntry(content_card, placeholder_text="Enter weight (e.g. 2.5)",
                                          fg_color=self.colors["input_bg"], border_color=self.colors["input_border"],
@@ -111,14 +111,14 @@ class ShreeMarutiApp(ctk.CTk):
         self.weight_entry.pack(fill="x", padx=20, pady=(0, 15))
         self.weight_entry.bind("<Return>", lambda e: self.calculate())
 
-        # --- 4. BUTTON ---
+        # --- BUTTON ---
         self.calc_btn = ctk.CTkButton(content_card, text="CALCULATE RATE 📦",
                                       command=self.calculate, corner_radius=10, height=45,
                                       fg_color=self.colors["maruti"], hover_color="#B71C1C",
                                       font=ctk.CTkFont(size=14, weight="bold"))
         self.calc_btn.pack(fill="x", padx=20, pady=(5, 15))
 
-        # --- 5. RESULT ---
+        # --- RESULT ---
         self.result_card = ctk.CTkFrame(content_card, fg_color="#FFF3F3", corner_radius=12, border_width=1, border_color="#EF9A9A")
         self.result_card.pack(fill="x", padx=20, pady=(0, 20))
         ctk.CTkLabel(self.result_card, text="TOTAL AMOUNT", font=ctk.CTkFont(size=11, weight="bold"), text_color=self.colors["text_sub"]).pack(pady=(10, 0))
@@ -144,29 +144,30 @@ class ShreeMarutiApp(ctk.CTk):
         cat = self.cat_var.get()
         zone = self.zone_var.get().lower()
 
-        # 1. Docket Charge Logic
-        # Normal (Standard) = ₹5, Fast Track = ₹10
+        # Docket Charge: Standard ₹5, Fast Track ₹10
         docket_charge = 10 if "Fast Track" in cat else 5
 
-        # Rates from PDF
+        # --- NEW RATES ---
         rates = {
             "standard dox": {
-                "state": {"base": 17, "addl": 17},
-                "roi": {"base": 45, "addl": 42},
-                "spl": {"base": 55, "addl": 52}
+                "state": {"base": 100, "addl": 20},   # 1kg = 100+20=120
+                "roi": {"base": 150, "addl": 100},    # 1kg = 150+100=250
+                "spl": {"base": 180, "addl": 100}     # 1kg = 180+100=280
             },
             "standard non-dox": {
-                "state": [{"limit": 10, "rate": 20}, {"limit": 50, "rate": 18}, {"limit": 999, "rate": 17}],
-                "roi": [{"limit": 10, "rate": 40}, {"limit": 50, "rate": 38}, {"limit": 999, "rate": 36}],
-                "spl": [{"limit": 10, "rate": 58}, {"limit": 50, "rate": 53}, {"limit": 999, "rate": 52}]
+                "state": 100,
+                "roi": 160,
+                "spl": 200
             },
             "fast track dox": {
-                "state": {"base": 160, "addl": 70},
-                "roi": {"base": 200, "addl": 120},
-                "spl": {"base": 230, "addl": 150}
+                "state": {"base": 400, "addl": 160},  # 1kg = 400+160=560
+                "roi": {"base": 500, "addl": 260},    # 1kg = 500+260=760
+                "spl": {"base": 560, "addl": 340}     # 1kg = 560+340=900
             },
             "fast track non-dox": {
-                "state": 130, "roi": 220, "spl": 250
+                "state": 350,
+                "roi": 550,
+                "spl": 610
             }
         }
 
@@ -186,29 +187,21 @@ class ShreeMarutiApp(ctk.CTk):
 
             elif cat == "Standard Non-Dox":
                 cw = math.ceil(w)
-                r = rates[cat.lower()][zone]
-                rate = 0
-                info = ""
-                for s in r:
-                    if cw <= s["limit"]:
-                        rate = s["rate"]
-                        info = f"0-{s['limit']}kg slab"
-                        break
-                if rate == 0: raise ValueError("Weight > 50kg")
+                rate = rates[cat.lower()][zone]
                 base_rate = rate * cw
-                detail = f"Surface: ₹{rate}/kg ({info}) × {cw}kg"
+                detail = f"Non-Dox: ₹{rate}/kg × {cw}kg"
 
             elif cat == "Fast Track Non-Dox":
                 cw = math.ceil(w)
                 rate = rates[cat.lower()][zone]
                 base_rate = rate * cw
-                detail = f"Fast Track: ₹{rate}/kg × {cw}kg"
+                detail = f"FT Non-Dox: ₹{rate}/kg × {cw}kg"
 
-        except ValueError as e:
-            self.show_error(str(e))
+        except Exception as e:
+            self.show_error("Error calculating rates")
             return
 
-        # Cost Chain
+        # Cost Chain: Docket -> Fuel 25% -> GST 18% -> Bus 10/kg -> Co-loader 10/kg -> Profit 50%
         subtotal = base_rate + docket_charge  
         subtotal = subtotal * 1.25  # Fuel
         subtotal = subtotal * 1.18  # GST
