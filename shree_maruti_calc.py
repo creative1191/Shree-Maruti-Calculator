@@ -147,37 +147,58 @@ class ShreeMarutiApp(ctk.CTk):
         # Docket Charge: Standard ₹5, Fast Track ₹10
         docket_charge = 10 if "Fast Track" in cat else 5
 
-        # --- NEW RATES ---
-        rates = {
-            "standard dox": {
-                "state": {"base": 100, "addl": 20},   # 1kg = 100+20=120
-                "roi": {"base": 150, "addl": 100},    # 1kg = 150+100=250
-                "spl": {"base": 180, "addl": 100}     # 1kg = 180+100=280
-            },
-            "standard non-dox": {
-                "state": 100,
-                "roi": 160,
-                "spl": 200
-            },
-            "fast track dox": {
-                "state": {"base": 400, "addl": 160},  # 1kg = 400+160=560
-                "roi": {"base": 500, "addl": 260},    # 1kg = 500+260=760
-                "spl": {"base": 560, "addl": 340}     # 1kg = 560+340=900
-            },
-            "fast track non-dox": {
-                "state": 350,
-                "roi": 550,
-                "spl": 610
-            }
-        }
-
         base_rate = 0
         detail = ""
 
         try:
-            if cat == "Standard Dox" or cat == "Fast Track Dox":
+            # --- 1. STANDARD DOX ---
+            if cat == "Standard Dox":
+                if zone == "state":
+                    # Special Logic for State Dox
+                    if w <= 0.5:
+                        base_rate = 100
+                        detail = "0-500gm @ ₹100"
+                    elif w <= 1.0:
+                        base_rate = 120
+                        detail = "Up to 1kg @ ₹120"
+                    else:
+                        extra_slabs = math.ceil((w - 1.0) / 0.5)
+                        base_rate = 120 + (extra_slabs * 60) # 1.5kg = 120 + 60 = 180
+                        detail = f"1kg ₹120 + {extra_slabs} addl slab(s) @ ₹60"
+                else:
+                    # ROI & SPL (Normal Slab Logic)
+                    rates = {
+                        "roi": {"base": 150, "addl": 100},
+                        "spl": {"base": 180, "addl": 100}
+                    }
+                    r = rates[zone]
+                    slabs = math.ceil(w / 0.5)
+                    if slabs == 1:
+                        base_rate = r["base"]
+                        detail = f"1 slab (500gm) @ ₹{r['base']}"
+                    else:
+                        base_rate = r["base"] + ((slabs - 1) * r["addl"])
+                        detail = f"{slabs} slabs: ₹{r['base']} + {(slabs-1)} addl @ ₹{r['addl']}"
+
+            # --- 2. STANDARD NON-DOX ---
+            elif cat == "Standard Non-Dox":
+                # Simple Per Kg Logic
+                rates = {"state": 100, "roi": 160, "spl": 200}
+                cw = math.ceil(w)
+                rate = rates[zone]
+                base_rate = rate * cw
+                detail = f"Non-Dox: ₹{rate}/kg × {cw}kg"
+
+            # --- 3. FAST TRACK DOX ---
+            elif cat == "Fast Track Dox":
+                # Normal Slab Logic
+                rates = {
+                    "state": {"base": 400, "addl": 160},
+                    "roi": {"base": 500, "addl": 260},
+                    "spl": {"base": 560, "addl": 340}
+                }
+                r = rates[zone]
                 slabs = math.ceil(w / 0.5)
-                r = rates[cat.lower()][zone]
                 if slabs == 1:
                     base_rate = r["base"]
                     detail = f"1 slab (500gm) @ ₹{r['base']}"
@@ -185,15 +206,12 @@ class ShreeMarutiApp(ctk.CTk):
                     base_rate = r["base"] + ((slabs - 1) * r["addl"])
                     detail = f"{slabs} slabs: ₹{r['base']} + {(slabs-1)} addl @ ₹{r['addl']}"
 
-            elif cat == "Standard Non-Dox":
-                cw = math.ceil(w)
-                rate = rates[cat.lower()][zone]
-                base_rate = rate * cw
-                detail = f"Non-Dox: ₹{rate}/kg × {cw}kg"
-
+            # --- 4. FAST TRACK NON-DOX ---
             elif cat == "Fast Track Non-Dox":
+                # Simple Per Kg Logic
+                rates = {"state": 350, "roi": 550, "spl": 610}
                 cw = math.ceil(w)
-                rate = rates[cat.lower()][zone]
+                rate = rates[zone]
                 base_rate = rate * cw
                 detail = f"FT Non-Dox: ₹{rate}/kg × {cw}kg"
 
