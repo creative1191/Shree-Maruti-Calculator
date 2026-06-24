@@ -23,7 +23,7 @@ class ShreeMarutiApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("Shree Maruti Rate Calculator")
-        self.geometry("480x650")
+        self.geometry("500x700")
         self.resizable(False, False)
         self.after(100, self.load_icon)
 
@@ -70,12 +70,10 @@ class ShreeMarutiApp(ctk.CTk):
                     img = img.resize((220, hsize), Image.Resampling.LANCZOS)
                     self.logo_img = ctk.CTkImage(light_image=img, size=(220, hsize))
                     ctk.CTkLabel(logo_frame, image=self.logo_img, text="").pack(pady=(10, 0))
-                else:
-                    raise FileNotFoundError
+                else: raise FileNotFoundError
         except Exception:
-            ctk.CTkLabel(logo_frame, text="SHREE MARUTI", font=ctk.CTkFont(size=24, weight="bold"),
+            ctk.CTkLabel(logo_frame, text="SHREE MARUTI", font=ctk.CTkFont(size=22, weight="bold"),
                          text_color=self.colors["maruti"]).pack(pady=(15, 0))
-
         ctk.CTkLabel(logo_frame, text="Integrated Logistics", font=ctk.CTkFont(size=10),
                      text_color=self.colors["text_sub"]).pack(pady=(2, 5))
 
@@ -83,67 +81,51 @@ class ShreeMarutiApp(ctk.CTk):
         content_card = ctk.CTkFrame(main_frame, fg_color=self.colors["card"], corner_radius=0, border_width=0)
         content_card.grid(row=1, column=0, sticky="ew")
 
-        self.add_title(content_card, "Shipment Details")
+        # --- 1. CATEGORY DROPDOWN (Directly written to avoid bugs) ---
+        ctk.CTkLabel(content_card, text="Category", font=ctk.CTkFont(size=14, weight="bold"), text_color=self.colors["text_main"], anchor="w").pack(fill="x", padx=20, pady=(15, 5))
+        self.cat_var = ctk.StringVar(value="Standard Dox")
+        cat_menu = ctk.CTkOptionMenu(content_card, variable=self.cat_var, 
+                                     values=["Standard Dox", "Standard Non-Dox", "Fast Track Dox", "Fast Track Non-Dox"],
+                                     fg_color=self.colors["input_bg"], button_color=self.colors["input_bg"],
+                                     button_hover_color="#E5E7EB", corner_radius=10, height=40, 
+                                     font=ctk.CTkFont(size=13, weight="bold"), text_color=self.colors["text_main"])
+        cat_menu.pack(fill="x", padx=20, pady=(0, 15))
 
-        # Zone
-        self.zone_var = ctk.StringVar(value="MP")
-        self.create_input_row(content_card, "Zone", is_menu=True, values=["MP", "ROI", "NE"])
+        # --- 2. ZONE DROPDOWN (Directly written) ---
+        ctk.CTkLabel(content_card, text="Zone", font=ctk.CTkFont(size=14, weight="bold"), text_color=self.colors["text_main"], anchor="w").pack(fill="x", padx=20, pady=(10, 5))
+        self.zone_var = ctk.StringVar(value="State")
+        zone_menu = ctk.CTkOptionMenu(content_card, variable=self.zone_var, 
+                                      values=["State", "ROI", "SPL"],
+                                      fg_color=self.colors["input_bg"], button_color=self.colors["input_bg"],
+                                      button_hover_color="#E5E7EB", corner_radius=10, height=40, 
+                                      font=ctk.CTkFont(size=13, weight="bold"), text_color=self.colors["text_main"])
+        zone_menu.pack(fill="x", padx=20, pady=(0, 15))
 
-        # Weight
-        self.weight_entry = self.create_input_row(content_card, "Weight (Kg)", is_entry=True, placeholder="Enter weight")
+        # --- 3. WEIGHT ENTRY (Directly written) ---
+        ctk.CTkLabel(content_card, text="Weight (Kg)", font=ctk.CTkFont(size=14, weight="bold"), text_color=self.colors["text_main"], anchor="w").pack(fill="x", padx=20, pady=(10, 5))
+        self.weight_entry = ctk.CTkEntry(content_card, placeholder_text="Enter weight (e.g. 2.5)",
+                                         fg_color=self.colors["input_bg"], border_color=self.colors["input_border"],
+                                         border_width=1, corner_radius=10, height=40,
+                                         font=ctk.CTkFont(size=13), text_color=self.colors["text_main"],
+                                         placeholder_text_color="#9CA3AF")
+        self.weight_entry.pack(fill="x", padx=20, pady=(0, 15))
         self.weight_entry.bind("<Return>", lambda e: self.calculate())
 
-        # Button
+        # --- 4. BUTTON ---
         self.calc_btn = ctk.CTkButton(content_card, text="CALCULATE RATE 📦",
                                       command=self.calculate, corner_radius=10, height=45,
                                       fg_color=self.colors["maruti"], hover_color="#B71C1C",
                                       font=ctk.CTkFont(size=14, weight="bold"))
         self.calc_btn.pack(fill="x", padx=20, pady=(5, 15))
 
-        # Result
+        # --- 5. RESULT ---
         self.result_card = ctk.CTkFrame(content_card, fg_color="#FFF3F3", corner_radius=12, border_width=1, border_color="#EF9A9A")
-        self.result_card.pack(fill="x", padx=20, pady=(0, 15))
-
-        ctk.CTkLabel(self.result_card, text="TOTAL AMOUNT", font=ctk.CTkFont(size=11, weight="bold"),
-                     text_color=self.colors["text_sub"]).pack(pady=(8, 0))
-
-        self.amount_label = ctk.CTkLabel(self.result_card, text="₹0", font=ctk.CTkFont(size=32, weight="bold"),
-                                         text_color=self.colors["maruti"])
+        self.result_card.pack(fill="x", padx=20, pady=(0, 20))
+        ctk.CTkLabel(self.result_card, text="TOTAL AMOUNT", font=ctk.CTkFont(size=11, weight="bold"), text_color=self.colors["text_sub"]).pack(pady=(10, 0))
+        self.amount_label = ctk.CTkLabel(self.result_card, text="₹0", font=ctk.CTkFont(size=36, weight="bold"), text_color=self.colors["maruti"])
         self.amount_label.pack(pady=(2, 2))
-
-        self.detail_label = ctk.CTkLabel(self.result_card, text="Select zone & enter weight",
-                                         font=ctk.CTkFont(size=11), text_color=self.colors["text_sub"])
-        self.detail_label.pack(pady=(0, 8))
-
-    def add_title(self, parent, text):
-        ctk.CTkLabel(parent, text=text, font=ctk.CTkFont(size=14, weight="bold"),
-                     text_color=self.colors["text_main"], anchor="w").pack(fill="x", padx=20, pady=(15, 10))
-
-    def create_input_row(self, parent, label_text, is_menu=False, is_entry=False, values=None, placeholder=""):
-        frame = ctk.CTkFrame(parent, fg_color="transparent")
-        frame.pack(fill="x", padx=20, pady=(0, 8))
-
-        ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12, weight="bold"),
-                     text_color=self.colors["text_main"], anchor="w").pack(fill="x", pady=(0, 4))
-
-        if is_entry:
-            entry = ctk.CTkEntry(frame, placeholder_text=placeholder,
-                                 fg_color=self.colors["input_bg"], border_color=self.colors["input_border"],
-                                 border_width=1, corner_radius=10, height=40,
-                                 font=ctk.CTkFont(size=13), text_color=self.colors["text_main"],
-                                 placeholder_text_color="#9CA3AF")
-            entry.pack(fill="x")
-            return entry
-        else:
-            menu = ctk.CTkOptionMenu(frame, variable=self.zone_var, values=values,
-                                     fg_color=self.colors["input_bg"], button_color=self.colors["input_bg"],
-                                     button_hover_color="#E5E7EB", corner_radius=10, height=40,
-                                     font=ctk.CTkFont(size=13, weight="bold"), text_color=self.colors["text_main"],
-                                     dropdown_text_color=self.colors["text_main"],
-                                     dropdown_fg_color=self.colors["card"],
-                                     dropdown_hover_color=self.colors["input_bg"])
-            menu.pack(fill="x")
-            return menu
+        self.detail_label = ctk.CTkLabel(self.result_card, text="Select category & enter weight", font=ctk.CTkFont(size=12), text_color=self.colors["text_sub"])
+        self.detail_label.pack(pady=(0, 10))
 
     def calculate(self):
         try:
@@ -159,37 +141,90 @@ class ShreeMarutiApp(ctk.CTk):
             self.show_error("Please enter a valid number")
             return
 
+        cat = self.cat_var.get()
         zone = self.zone_var.get().lower()
 
-        # Shree Maruti DOX Rates (base from rate chart)
+        # 1. Docket Charge Logic
+        # Normal (Standard) = ₹5, Fast Track = ₹10
+        docket_charge = 10 if "Fast Track" in cat else 5
+
+        # Rates from PDF
         rates = {
-            "mp":  {"base_500": 17, "addl_500": 17},
-            "roi": {"base_500": 45, "addl_500": 42},
-            "ne":  {"base_500": 55, "addl_500": 52}
+            "standard dox": {
+                "state": {"base": 17, "addl": 17},
+                "roi": {"base": 45, "addl": 42},
+                "spl": {"base": 55, "addl": 52}
+            },
+            "standard non-dox": {
+                "state": [{"limit": 10, "rate": 20}, {"limit": 50, "rate": 18}, {"limit": 999, "rate": 17}],
+                "roi": [{"limit": 10, "rate": 40}, {"limit": 50, "rate": 38}, {"limit": 999, "rate": 36}],
+                "spl": [{"limit": 10, "rate": 58}, {"limit": 50, "rate": 53}, {"limit": 999, "rate": 52}]
+            },
+            "fast track dox": {
+                "state": {"base": 160, "addl": 70},
+                "roi": {"base": 200, "addl": 120},
+                "spl": {"base": 230, "addl": 150}
+            },
+            "fast track non-dox": {
+                "state": 130, "roi": 220, "spl": 250
+            }
         }
 
-        r = rates[zone]
-        slabs = math.ceil(w / 0.5)  # Each 500gm = 1 slab
+        base_rate = 0
+        detail = ""
 
-        if slabs == 1:
-            base = r["base_500"]
-            detail = f"1 slab (500gm) @ ₹{base}"
-        else:
-            base = r["base_500"] + ((slabs - 1) * r["addl_500"])
-            detail = f"{slabs} slabs: 1st @ ₹{r['base_500']} + {slabs-1} addl @ ₹{r['addl_500']}"
+        try:
+            if cat == "Standard Dox" or cat == "Fast Track Dox":
+                slabs = math.ceil(w / 0.5)
+                r = rates[cat.lower()][zone]
+                if slabs == 1:
+                    base_rate = r["base"]
+                    detail = f"1 slab (500gm) @ ₹{r['base']}"
+                else:
+                    base_rate = r["base"] + ((slabs - 1) * r["addl"])
+                    detail = f"{slabs} slabs: ₹{r['base']} + {(slabs-1)} addl @ ₹{r['addl']}"
 
-        # Cost chain: Docket ₹5 → Fuel 25% → GST 18% → Bus ₹10 → Profit 50%
-        subtotal = base + 5  # Docket
+            elif cat == "Standard Non-Dox":
+                cw = math.ceil(w)
+                r = rates[cat.lower()][zone]
+                rate = 0
+                info = ""
+                for s in r:
+                    if cw <= s["limit"]:
+                        rate = s["rate"]
+                        info = f"0-{s['limit']}kg slab"
+                        break
+                if rate == 0: raise ValueError("Weight > 50kg")
+                base_rate = rate * cw
+                detail = f"Surface: ₹{rate}/kg ({info}) × {cw}kg"
+
+            elif cat == "Fast Track Non-Dox":
+                cw = math.ceil(w)
+                rate = rates[cat.lower()][zone]
+                base_rate = rate * cw
+                detail = f"Fast Track: ₹{rate}/kg × {cw}kg"
+
+        except ValueError as e:
+            self.show_error(str(e))
+            return
+
+        # Cost Chain
+        subtotal = base_rate + docket_charge  
         subtotal = subtotal * 1.25  # Fuel
         subtotal = subtotal * 1.18  # GST
-        subtotal = subtotal + 10  # Bus
-        final = math.ceil(subtotal * 1.5)  # 50% profit
+        
+        cw = math.ceil(w)
+        subtotal = subtotal + (10 * cw)  # Bus
+        subtotal = subtotal + (10 * cw)  # Co-loader
+        
+        final = math.ceil(subtotal * 1.5)  # Profit
 
-        self.show_result(final, detail)
+        self.show_result(final, f"Docket: ₹{docket_charge} | {detail}")
 
     def show_result(self, amount, detail):
-        self.amount_label.configure(text=f"₹{amount}")
+        self.amount_label.configure(text=f"₹{amount}", text_color=self.colors["maruti"])
         self.detail_label.configure(text=detail)
+        self.result_card.configure(fg_color="#FFF3F3")
 
     def show_error(self, message):
         self.amount_label.configure(text="⚠️", text_color="#F44336")
