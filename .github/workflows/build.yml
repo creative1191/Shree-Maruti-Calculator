@@ -11,10 +11,10 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -25,7 +25,6 @@ jobs:
 
       - name: Generate Icon (icon.ico)
         run: |
-          # Logic: Agar icon_source.png hai toh wo use karo, nahi toh logo crop karo
           python -c "
           from PIL import Image
           import os
@@ -52,7 +51,6 @@ jobs:
 
       - name: Build EXE with PyInstaller
         run: |
-          # Build command updated for Shree Maruti
           pyinstaller --onefile --windowed --icon="icon.ico" --add-data "maruti_logo.png;." --add-data "icon.ico;." --name "Shree_Maruti_Calculator" shree_maruti_calc.py
 
       - name: Upload EXE Artifact
